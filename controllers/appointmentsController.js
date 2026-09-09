@@ -46,6 +46,17 @@ exports.getAllAppointments = (req, res) => {
   res.json(appointments);
 };
 
+// HTTP QUERY — как GET, но с телом запроса: { "status": "completed" }
+exports.queryAppointments = (req, res) => {
+  const { status } = req.body || {};
+
+  if (status) {
+    return res.json(appointments.filter((a) => a.status === status));
+  }
+
+  res.json(appointments);
+};
+
 exports.getAppointmentById = (req, res) => {
   const id = Number(req.params.id);
   if (!Number.isInteger(id)) {
@@ -86,6 +97,25 @@ exports.updateAppointment = (req, res) => {
   appointment.time = req.body.time;
   appointment.reason = req.body.reason ? req.body.reason.trim() : '';
   appointment.status = req.body.status || 'scheduled';
+
+  res.json(appointment);
+};
+
+exports.patchAppointment = (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id)) {
+    throw new ApiError(400, 'Параметр "id" должен быть целым числом');
+  }
+  const appointment = findAppointmentOrFail(id);
+  validateAppointmentPayload(req.body, { partial: true });
+
+  const { patientName, doctor, date, time, reason, status } = req.body;
+  if (patientName !== undefined) appointment.patientName = patientName.trim();
+  if (doctor !== undefined) appointment.doctor = doctor.trim();
+  if (date !== undefined) appointment.date = date;
+  if (time !== undefined) appointment.time = time;
+  if (reason !== undefined) appointment.reason = reason.trim();
+  if (status !== undefined) appointment.status = status;
 
   res.json(appointment);
 };

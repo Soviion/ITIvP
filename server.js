@@ -6,7 +6,7 @@ const ApiError = require('./utils/ApiError');
 
 const PORT = process.env.PORT || 3000;
 
-app.use(express.json());
+app.use(express.json()); // middleware
 
 app.get('/', (req, res) => {
   res.json({ message: 'Clinic Management API' });

@@ -1,7 +1,7 @@
 {
   "name": "lab21",
   "version": "1.0.0",
-  "description": "REST API для системы управления клиникой (лабораторная работа 1)",
+  "description": "REST API для системы управления клиникой",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

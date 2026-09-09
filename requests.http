@@ -1,6 +1,18 @@
+
+###
 GET http://localhost:3000/appointments
 Connection: keep-alive
 
+###
+QUERY http://localhost:3000/appointments
+Content-Type: application/json
+Connection: keep-alive
+
+{
+  "status": "completed"
+}
+
+###
 GET http://localhost:3000/appointments/1
 Connection: keep-alive
 
@@ -8,7 +20,7 @@ Connection: keep-alive
 GET http://localhost:3000/appointments/999
 Connection: keep-alive
 
-
+###
 POST http://localhost:3000/appointments
 Content-Type: application/json
 Connection: keep-alive
@@ -21,6 +33,14 @@ Connection: keep-alive
   "reason": "Консультация"
 }
 
+###
+PATCH http://localhost:3000/appointments/1
+Content-Type: application/json
+Connection: keep-alive
+
+{
+  "status": "completed"
+}
 
 ### 400 
 POST http://localhost:3000/appointments
@@ -31,7 +51,7 @@ Connection: keep-alive
 
 }
 
-
+###
 PUT http://localhost:3000/appointments/1
 Content-Type: application/json
 Connection: keep-alive
@@ -57,7 +77,7 @@ Connection: keep-alive
   "time": "09:30"
 }
 
-
+###
 DELETE http://localhost:3000/appointments/2
 
 ### 404

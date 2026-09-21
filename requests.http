@@ -13,7 +13,7 @@ Connection: keep-alive
 }
 
 ###
-GET http://localhost:3000/appointments/1
+GET http://localhost:3000/appointments/66
 Connection: keep-alive
 
 ### 404
@@ -28,18 +28,18 @@ Connection: keep-alive
 {
   "patientName": "Козлова Анна",
   "doctor": "Петрова А.С.",
-  "date": "12-09-2026",
+  "date": "12-09",
   "time": "11:00",
   "reason": "Консультация"
 }
 
 ###
-PATCH http://localhost:3000/appointments/1
+PATCH http://localhost:3000/appointments/4
 Content-Type: application/json
 Connection: keep-alive
 
 {
-  "status": "completed"
+  "status": "scheduled"
 }
 
 ### 400 
@@ -52,7 +52,7 @@ Connection: keep-alive
 }
 
 ###
-PUT http://localhost:3000/appointments/1
+PUT http://localhost:3000/appointments/4
 Content-Type: application/json
 Connection: keep-alive
 
@@ -78,7 +78,7 @@ Connection: keep-alive
 }
 
 ###
-DELETE http://localhost:3000/appointments/2
+DELETE http://localhost:3000/appointments/4
 
 ### 404
 DELETE http://localhost:3000/appointments/999

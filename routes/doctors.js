@@ -1,10 +1,9 @@
 const express = require('express');
-const controller = require('../controllers/appointmentsController');
+const controller = require('../controllers/doctorsController');
 
 const router = express.Router();
 
 router.get('/', controller.getAll);
-router.query('/', controller.query);
 router.get('/:id', controller.getById);
 router.post('/', controller.create);
 router.put('/:id', controller.update);

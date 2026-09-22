@@ -1,87 +1,180 @@
+@host = http://localhost:3000
 
 ###
-GET http://localhost:3000/appointments
-Connection: keep-alive
+GET {{host}}/
+
+########## Справочники ##########
 
 ###
-QUERY http://localhost:3000/appointments
-Content-Type: application/json
-Connection: keep-alive
-
-{
-  "status": "completed"
-}
+GET {{host}}/specialties
 
 ###
-GET http://localhost:3000/appointments/66
-Connection: keep-alive
+GET {{host}}/doctors
+
+###
+GET {{host}}/doctors/1
 
 ### 404
-GET http://localhost:3000/appointments/999
-Connection: keep-alive
+GET {{host}}/doctors/999
 
 ###
-POST http://localhost:3000/appointments
+POST {{host}}/doctors
 Content-Type: application/json
-Connection: keep-alive
 
 {
-  "patientName": "Козлова Анна",
-  "doctor": "Петрова А.С.",
-  "date": "12-09",
-  "time": "11:00",
-  "reason": "Консультация"
-}
-
-###
-PATCH http://localhost:3000/appointments/4
-Content-Type: application/json
-Connection: keep-alive
-
-{
-  "status": "scheduled"
-}
-
-### 400 
-POST http://localhost:3000/appointments
-Content-Type: application/json
-Connection: keep-alive
-
-{
-
+  "specialtyId": 1,
+  "lastName": "Гончаров",
+  "firstName": "Сергей",
+  "middleName": "Олегович",
+  "phone": "+375 29 111-11-07",
+  "email": "s.goncharov@clinic.by"
 }
 
 ###
-PUT http://localhost:3000/appointments/4
+PATCH {{host}}/doctors/1
 Content-Type: application/json
-Connection: keep-alive
 
 {
-  "patientName": "Иванов Иван Иванович",
-  "doctor": "Петрова А.С.",
-  "date": "12-09-2026",
-  "time": "15:30",
-  "reason": "Плановый осмотр",
-  "status": "completed"
+  "phone": "+375 29 111-11-99"
 }
+
+########## Пациенты ##########
+
+###
+GET {{host}}/patients
+
+###
+GET {{host}}/patients/1
+
+###
+POST {{host}}/patients
+Content-Type: application/json
+
+{
+  "lastName": "Тестова",
+  "firstName": "Алина",
+  "middleName": "Романовна",
+  "birthDate": "15-06-1995",
+  "gender": "female",
+  "phone": "+375 29 300-00-01",
+  "email": "testova@example.by",
+  "insuranceNumber": "BY-200001"
+}
+
+### 400 (пустое тело)
+POST {{host}}/patients
+Content-Type: application/json
+
+{}
+
+###
+PUT {{host}}/patients/9
+Content-Type: application/json
+
+{
+  "lastName": "Тестова",
+  "firstName": "Алина",
+  "birthDate": "15-06-1995",
+  "gender": "female",
+  "phone": "+375 29 300-00-02"
+}
+
+###
+DELETE {{host}}/patients/9
+
+########## Записи на приём ##########
+
+###
+GET {{host}}/appointments
+
+###
+GET {{host}}/appointments/1
 
 ### 404
-PUT http://localhost:3000/appointments/99
+GET {{host}}/appointments/999
+
+### QUERY — как GET, но критерии поиска в теле запроса
+QUERY {{host}}/appointments
 Content-Type: application/json
-Connection: keep-alive
 
 {
-  "patientName": "Тест",
-  "doctor": "Тест",
-  "date": "10-09-2026",
+  "status": "scheduled",
+  "doctorId": 1
+}
+
+###
+POST {{host}}/appointments
+Content-Type: application/json
+
+{
+  "patientId": 4,
+  "doctorId": 3,
+  "date": "25-09-2026",
+  "time": "11:30",
+  "durationMinutes": 30,
+  "reason": "Консультация",
+  "cabinet": "312"
+}
+
+### 409 (врач уже занят на это время)
+POST {{host}}/appointments
+Content-Type: application/json
+
+{
+  "patientId": 2,
+  "doctorId": 1,
+  "date": "22-09-2026",
   "time": "09:30"
 }
 
+### 400 (ошибки валидации)
+POST {{host}}/appointments
+Content-Type: application/json
+
+{
+  "patientId": 999,
+  "date": "31-02-2026",
+  "time": "25:00"
+}
+
 ###
-DELETE http://localhost:3000/appointments/4
+PUT {{host}}/appointments/12
+Content-Type: application/json
+
+{
+  "patientId": 4,
+  "doctorId": 3,
+  "date": "26-09-2026",
+  "time": "15:30",
+  "reason": "Плановый осмотр",
+  "status": "scheduled",
+  "cabinet": "312"
+}
 
 ### 404
-DELETE http://localhost:3000/appointments/999
+PUT {{host}}/appointments/999
+Content-Type: application/json
+
+{
+  "patientId": 4,
+  "doctorId": 3,
+  "date": "26-09-2026",
+  "time": "15:30"
+}
+
+###
+PATCH {{host}}/appointments/12
+Content-Type: application/json
+
+{
+  "status": "completed"
+}
+
+###
+DELETE {{host}}/appointments/12
 
 ### 404
-GET http://localhost:3000/unknown-route
+DELETE {{host}}/appointments/999
+
+### 404
+GET {{host}}/unknown-route

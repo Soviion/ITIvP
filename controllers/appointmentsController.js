@@ -53,8 +53,6 @@ const crud = createCrudController({
   },
 });
 
-// HTTP QUERY — как GET, но критерии поиска передаются в теле запроса:
-// { "status": "scheduled", "doctorId": 1, "patientId": 2, "date": "22-09-2026" }
 async function query(req, res) {
   const filters = getBody(req);
   const where = {};

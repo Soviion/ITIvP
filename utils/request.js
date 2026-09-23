@@ -8,7 +8,7 @@ function parseId(req) {
   return id;
 }
 
-// В Express 5 req.body равен undefined, если тело не передано.
+// В Express 5 req.body равен undefined, если тело не передано
 function getBody(req) {
   const body = req.body;
   if (body === undefined) return {};

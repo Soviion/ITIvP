@@ -12,12 +12,12 @@ function assertRequired(data, required) {
   }
 }
 
-/**
- * Собирает стандартные CRUD-обработчики поверх модели Sequelize.
- *  - fields   — поля, которые клиент может передавать (остальное игнорируется);
- *  - required — обязательные поля для POST и PUT;
- *  - prepare  — преобразование/проверка входных данных (даты, внешние ключи).
- */
+
+ // cобирает стандартные CRUD обработчики поверх модели Sequelize.
+ // fields поля, которые клиент может передавать - разрешенные
+ // required  обязательные поля для POST и PUT иначе 400 
+ // prepare проверка входных данных даты, вторичных ключей
+ 
 module.exports = function createCrudController({
   Model,
   itemKey,
@@ -34,7 +34,7 @@ module.exports = function createCrudController({
     return row;
   };
 
-  // PUT — полная замена: необязательные поля, которых нет в теле, сбрасываются к значению по умолчанию
+  // PUT - необязательные поля которых нет в теле запроса - устанавливаются по умолчанию из модели или null
   const withDefaults = (data) => {
     const attributes = Model.getAttributes();
     const result = { ...data };

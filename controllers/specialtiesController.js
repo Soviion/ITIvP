@@ -1,7 +1,7 @@
 const { Specialty } = require('../models');
 const createCrudController = require('./createCrudController');
 
-// Справочник специальностей: наружу отдаются только GET-маршруты
+// cправочник специальностей  отдаются только GET-маршруты
 module.exports = createCrudController({
   Model: Specialty,
   itemKey: 'specialty',

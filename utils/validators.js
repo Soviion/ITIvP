@@ -1,6 +1,6 @@
 const ApiError = require('./ApiError');
 
-// Готовые наборы валидаторов Sequelize с русскими сообщениями.
+// Готовые наборы валидаторов Sequelize 
 const requiredText = (label, max) => ({
   notNull: { msg: `Поле «${label}» обязательно` },
   notEmpty: { msg: `Поле «${label}» не может быть пустым` },

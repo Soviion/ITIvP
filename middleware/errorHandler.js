@@ -6,7 +6,6 @@ const {
 } = require('sequelize');
 const ApiError = require('../utils/ApiError');
 
-// Понятные сообщения для именованных ограничений БД
 const CONSTRAINT_MESSAGES = {
   appointments_doctor_slot_unique: 'Врач уже занят на это время',
   doctors_email_unique: 'Врач с таким e-mail уже существует',
@@ -45,7 +44,6 @@ function toApiError(err) {
   return err;
 }
 
-// eslint-disable-next-line no-unused-vars
 function errorHandler(err, req, res, next) {
   const apiError = toApiError(err);
   const statusCode = apiError.statusCode || 500;

@@ -11,6 +11,7 @@ const CONSTRAINT_MESSAGES = {
   doctors_email_unique: 'Врач с таким e-mail уже существует',
   patients_insurance_number_unique: 'Пациент с таким номером полиса уже существует',
   queue_tickets_doctor_day_number_unique: 'Такой номер в очереди врача на эту дату уже занят',
+  users_email_unique: 'Пользователь с таким e-mail уже зарегистрирован',
 };
 
 function notFound(req, res, next) {

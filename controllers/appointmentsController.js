@@ -1,4 +1,5 @@
-const { Appointment, Patient, Doctor, Specialty } = require('../models');
+const { Appointment, Patient, Doctor } = require('../models');
+const appointmentInclude = require('../services/appointmentInclude');
 const createCrudController = require('./createCrudController');
 const ApiError = require('../utils/ApiError');
 const { fromDisplayDate, fromDisplayTime } = require('../utils/dates');
@@ -7,22 +8,7 @@ const { getBody } = require('../utils/request');
 
 const STATUSES = Appointment.getAttributes().status.values;
 
-// paranoid: false — в истории приёмов остаются данные удалённых (архивных) пациентов и врачей
-const include = [
-  {
-    model: Patient,
-    as: 'patient',
-    attributes: ['id', 'lastName', 'firstName', 'middleName'],
-    paranoid: false,
-  },
-  {
-    model: Doctor,
-    as: 'doctor',
-    attributes: ['id', 'lastName', 'firstName', 'middleName'],
-    paranoid: false,
-    include: [{ model: Specialty, as: 'specialty', attributes: ['id', 'name'] }],
-  },
-];
+const include = appointmentInclude();
 
 const order = [['date', 'ASC'], ['time', 'ASC'], ['id', 'ASC']];
 

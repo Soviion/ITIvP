@@ -7,6 +7,7 @@ const { toDisplayDate } = require('../utils/dates');
 module.exports = (sequelize, DataTypes) => {
   class Patient extends Model {
     static associate(models) {
+      Patient.belongsTo(models.User, { foreignKey: 'userId', as: 'user' });
       Patient.hasOne(models.MedicalRecord, { foreignKey: 'patientId', as: 'medicalRecord' });
       Patient.hasMany(models.Appointment, { foreignKey: 'patientId', as: 'appointments' });
       Patient.hasMany(models.QueueTicket, { foreignKey: 'patientId', as: 'queueTickets' });
@@ -20,6 +21,7 @@ module.exports = (sequelize, DataTypes) => {
   }
 
   Patient.init({
+    userId: { type: DataTypes.INTEGER, unique: true },
     lastName: {
       type: DataTypes.STRING(60),
       allowNull: false,
@@ -78,6 +80,18 @@ module.exports = (sequelize, DataTypes) => {
     insuranceNumber: {
       type: DataTypes.STRING(30),
       validate: optionalText('Номер полиса', 30),
+    },
+    socialStatus: {
+      type: DataTypes.STRING(20),
+      validate: { isIn: { args: [['student', 'schoolchild', 'child', 'adult']], msg: 'Неизвестный социальный статус' } },
+    },
+    workplace: {
+      type: DataTypes.STRING(150),
+      validate: optionalText('Место работы', 150),
+    },
+    trustedPerson: {
+      type: DataTypes.STRING(300),
+      validate: optionalText('Доверенное лицо', 300),
     },
     fullName: {
       type: DataTypes.VIRTUAL,

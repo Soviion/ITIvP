@@ -1,5 +1,5 @@
 const nodemailer = require('nodemailer');
-const { smtp, verification } = require('../config/auth');
+const { smtp } = require('../config/auth');
 
 let transporter;
 
@@ -21,28 +21,29 @@ function getTransporter() {
   return transporter;
 }
 
-async function sendVerificationEmail(to, token) {
-  const link = `${verification.baseUrl}/auth/verify-email?token=${token}`;
-  const hours = verification.ttlHours;
+const SUBJECTS = {
+  register: 'Код подтверждения почты — Клиника',
+  change_email: 'Код для смены почты — Клиника',
+};
 
+// Письмо с одноразовым 6-значным кодом (регистрация и смена почты)
+async function sendCodeEmail(to, code, purpose, ttlMinutes) {
+  const action = purpose === 'change_email' ? 'смены почты в личном кабинете' : 'регистрации в личном кабинете пациента';
   await getTransporter().sendMail({
     from: smtp.from,
     to,
-    subject: 'Подтверждение e-mail — Clinic API',
+    subject: SUBJECTS[purpose],
     text: [
-      'Вы зарегистрировались в Clinic API.',
-      'Чтобы активировать аккаунт, перейдите по ссылке:',
-      link,
+      `Код для ${action}: ${code}`,
       '',
-      `Ссылка действует ${hours} ч. Если вы не регистрировались, просто проигнорируйте это письмо.`,
+      `Код действует ${ttlMinutes} минут. Если вы его не запрашивали, просто проигнорируйте письмо.`,
     ].join('\n'),
     html: `
-      <div style="font-family:Arial,sans-serif;max-width:520px;margin:auto;color:#223">
-        <h2>Подтверждение e-mail</h2>
-        <p>Вы зарегистрировались в Clinic API. Чтобы активировать аккаунт, нажмите кнопку:</p>
-        <p><a href="${link}" style="display:inline-block;background:#1a73e8;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none">Подтвердить e-mail</a></p>
-        <p>Или откройте ссылку в браузере:<br><a href="${link}">${link}</a></p>
-        <p style="color:#777;font-size:13px">Ссылка действует ${hours} ч. Если вы не регистрировались, просто проигнорируйте это письмо.</p>
+      <div style="font-family:Arial,sans-serif;max-width:480px;margin:auto;color:#18231f">
+        <h2 style="margin:0 0 12px">Код подтверждения</h2>
+        <p>Код для ${action}:</p>
+        <p style="font-size:34px;letter-spacing:8px;font-weight:700;margin:16px 0;color:#0d7a66">${code}</p>
+        <p style="color:#76817b;font-size:13px">Код действует ${ttlMinutes} минут. Если вы его не запрашивали, просто проигнорируйте письмо.</p>
       </div>`,
   });
 }
@@ -61,4 +62,4 @@ async function sendTestEmail() {
   });
 }
 
-module.exports = { sendVerificationEmail, verifyConnection, sendTestEmail };
+module.exports = { sendCodeEmail, verifyConnection, sendTestEmail };

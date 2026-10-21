@@ -7,7 +7,6 @@ const randomToken = (bytes = 32) => crypto.randomBytes(bytes).toString('hex');
 
 const getKey = () => Buffer.from(twoFactor.encryptionKey, 'hex');
 
-// AES-256-GCM: секрет TOTP хранится в БД только в зашифрованном виде
 function encrypt(plainText) {
   const iv = crypto.randomBytes(12);
   const cipher = crypto.createCipheriv('aes-256-gcm', getKey(), iv);

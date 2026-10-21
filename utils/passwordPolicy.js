@@ -1,7 +1,8 @@
 const ApiError = require('./ApiError');
 
 const MIN_LENGTH = 8;
-// bcrypt учитывает только первые 72 байта пароля
+// bcrypt учитывает только первые 72 байта 
+
 const MAX_BYTES = 72;
 
 const RULES = [

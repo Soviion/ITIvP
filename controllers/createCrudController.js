@@ -11,8 +11,6 @@ function assertRequired(data, required) {
     );
   }
 }
-
-
  // cобирает стандартные CRUD обработчики поверх модели Sequelize.
  // fields поля, которые клиент может передавать - разрешенные
  // required  обязательные поля для POST и PUT иначе 400 

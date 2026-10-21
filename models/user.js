@@ -4,6 +4,10 @@ const { Model } = require('sequelize');
 
 module.exports = (sequelize, DataTypes) => {
   class User extends Model {
+    static associate(models) {
+      User.hasOne(models.Patient, { foreignKey: 'userId', as: 'patient' });
+    }
+
     // Служебные и секретные поля никогда не попадают в JSON-ответы API
     toJSON() {
       const {
@@ -36,6 +40,13 @@ module.exports = (sequelize, DataTypes) => {
     passwordHash: {
       type: DataTypes.STRING(100),
       allowNull: false,
+    },
+    // patient — пациент личного кабинета, staff — сотрудник регистратуры
+    role: {
+      type: DataTypes.STRING(20),
+      allowNull: false,
+      defaultValue: 'patient',
+      validate: { isIn: { args: [['patient', 'staff']], msg: 'Роль должна быть patient или staff' } },
     },
     isVerified: {
       type: DataTypes.BOOLEAN,

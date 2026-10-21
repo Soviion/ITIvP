@@ -1,17 +1,16 @@
 const bcrypt = require('bcrypt');
 const { Op } = require('sequelize');
-const { User } = require('../models');
+const { User, Patient } = require('../models');
+const { normalizePhone } = require('../utils/phone');
 const ApiError = require('../utils/ApiError');
 const { getBody } = require('../utils/request');
 const { normalizeEmail, normalizeCode, requireString } = require('../utils/authInput');
 const { assertStrongPassword } = require('../utils/passwordPolicy');
-const { sha256, randomToken, encrypt, decrypt } = require('../utils/crypto');
-const { jwt: jwtConfig, bcryptRounds, verification } = require('../config/auth');
+const { encrypt, decrypt } = require('../utils/crypto');
+const { jwt: jwtConfig, bcryptRounds } = require('../config/auth');
 const { signAccessToken, signTwoFactorToken, verifyToken } = require('../services/tokens');
-const { sendVerificationEmail } = require('../services/mailer');
 const twoFactor = require('../services/twoFactor');
 
-// Хеш для «пустого» сравнения: время ответа не выдаёт, существует ли такой e-mail
 const DUMMY_HASH = bcrypt.hashSync('dummy-password-for-timing', bcryptRounds);
 
 const sessionResponse = (user) => ({
@@ -20,22 +19,6 @@ const sessionResponse = (user) => ({
   expiresIn: jwtConfig.expiresIn,
   user,
 });
-
-// Новый токен подтверждения: в письмо уходит сам токен, в БД — только его SHA-256
-async function sendNewVerification(user) {
-  const token = randomToken();
-  await user.update({
-    emailVerificationTokenHash: sha256(token),
-    emailVerificationExpires: new Date(Date.now() + verification.ttlHours * 60 * 60 * 1000),
-  });
-  try {
-    await sendVerificationEmail(user.email, token);
-    return true;
-  } catch (err) {
-    console.error(`Не удалось отправить письмо на ${user.email}: ${err.message}`);
-    return false;
-  }
-}
 
 function assertCodeResult(result, failStatus) {
   if (result === 'replay') {
@@ -49,94 +32,31 @@ function assertCodeResult(result, failStatus) {
   }
 }
 
-const htmlPage = (title, message, ok) => `<!doctype html>
-<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>${title}</title>
-<style>
-  body{font-family:system-ui,Arial,sans-serif;background:#f4f7fb;display:flex;min-height:100vh;align-items:center;justify-content:center;margin:0}
-  .card{background:#fff;padding:32px 40px;border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,.08);max-width:420px;text-align:center}
-  h1{font-size:22px;margin:0 0 12px;color:${ok ? '#1a7f4b' : '#c0392b'}}
-  p{color:#445;line-height:1.5;margin:0}
-</style></head>
-<body><div class="card"><h1>${title}</h1><p>${message}</p></div></body></html>`;
+//  Вход 
 
-// Ссылку открывают из письма в браузере, поэтому браузеру отдаём страницу, остальным клиентам — JSON
-function respondVerification(res, status, title, message) {
-  res.status(status).format({
-    json: () => res.json(status === 200 ? { message } : { error: message }),
-    html: () => res.send(htmlPage(title, message, status === 200)),
-  });
+// Вход по почте или по номеру телефона: поле login (для совместимости принимается и email)
+async function findUserByLogin(login) {
+  if (login.includes('@')) return User.findOne({ where: { email: normalizeEmail(login) } });
+
+  const phone = normalizePhone(login);
+  if (!phone) throw new ApiError(400, 'Введите почту или телефон в формате +375(44)4444444');
+  const patient = await Patient.findOne({ where: { phone, userId: { [Op.ne]: null } }, include: [{ model: User, as: 'user' }] });
+  return patient?.user ?? null;
 }
-
-// ---------- Регистрация и подтверждение e-mail ----------
-
-exports.register = async (req, res) => {
-  const body = getBody(req);
-  const email = normalizeEmail(body.email);
-  const password = requireString(body.password, 'password');
-  assertStrongPassword(password, { email });
-
-  if (await User.count({ where: { email } })) {
-    throw new ApiError(409, 'Пользователь с таким e-mail уже зарегистрирован');
-  }
-
-  const passwordHash = await bcrypt.hash(password, bcryptRounds);
-  const user = await User.create({ email, passwordHash });
-  const emailSent = await sendNewVerification(user);
-
-  res.status(201).json({
-    message: emailSent
-      ? 'Регистрация выполнена. Мы отправили письмо со ссылкой для подтверждения e-mail'
-      : 'Регистрация выполнена, но письмо отправить не удалось. Запросите повторную отправку: POST /auth/resend-verification',
-    emailSent,
-    user,
-  });
-};
-
-exports.verifyEmail = async (req, res) => {
-  const token = typeof req.query.token === 'string' ? req.query.token : '';
-  const user = /^[a-f0-9]{64}$/.test(token)
-    ? await User.findOne({
-      where: {
-        emailVerificationTokenHash: sha256(token),
-        emailVerificationExpires: { [Op.gt]: new Date() },
-      },
-    })
-    : null;
-
-  if (!user) {
-    return respondVerification(res, 400, 'Ссылка недействительна', 'Ссылка подтверждения недействительна или устарела. Запросите новое письмо.');
-  }
-
-  await user.update({ isVerified: true, emailVerificationTokenHash: null, emailVerificationExpires: null });
-  return respondVerification(res, 200, 'E-mail подтверждён', 'Аккаунт активирован. Теперь можно войти в систему.');
-};
-
-exports.resendVerification = async (req, res) => {
-  const email = normalizeEmail(getBody(req).email);
-  const user = await User.findOne({ where: { email } });
-  if (user && !user.isVerified) {
-    await sendNewVerification(user);
-  }
-  // Ответ одинаков для любого e-mail — нельзя узнать, зарегистрирован ли адрес
-  res.json({ message: 'Если такой e-mail зарегистрирован и ещё не подтверждён, мы отправили новое письмо' });
-};
-
-// ---------- Вход ----------
 
 exports.login = async (req, res) => {
   const body = getBody(req);
-  const email = normalizeEmail(body.email);
+  const login = requireString(body.login ?? body.email, 'login').trim();
   const password = requireString(body.password, 'password');
 
-  const user = await User.findOne({ where: { email } });
+  const user = await findUserByLogin(login);
   const passwordOk = await bcrypt.compare(password, user ? user.passwordHash : DUMMY_HASH);
   if (!user || !passwordOk) {
-    throw new ApiError(401, 'Неверный e-mail или пароль');
+    throw new ApiError(401, 'Неверная почта, телефон или пароль');
   }
 
   if (!user.isVerified) {
-    throw new ApiError(403, 'E-mail не подтверждён. Перейдите по ссылке из письма или запросите новое: POST /auth/resend-verification');
+    throw new ApiError(403, 'E-mail не подтверждён');
   }
 
   if (user.twoFactorEnabled) {
@@ -164,7 +84,7 @@ exports.loginTwoFactor = async (req, res) => {
   res.json(sessionResponse(user));
 };
 
-// ---------- Смена пароля ----------
+//  Смена пароля 
 
 exports.changePassword = async (req, res) => {
   const body = getBody(req);

@@ -5,7 +5,7 @@ const { User } = require('../models');
 const { twoFactor } = require('../config/auth');
 const { decrypt } = require('../utils/crypto');
 
-// Google Authenticator — обычный TOTP (RFC 6238): SHA-1, 6 цифр, шаг 30 секунд
+// Google Authenticator — обычный TOTP - Time-based One-Time Password 6 цифр раз в 30 секунл
 function buildTotp(base32Secret, accountName) {
   return new OTPAuth.TOTP({
     issuer: twoFactor.issuer,
@@ -27,11 +27,6 @@ const toQrPng = (uri) => QRCode.toBuffer(uri, { margin: 2, width: 300 });
 
 const currentStep = () => Math.floor(Date.now() / 1000 / twoFactor.period);
 
-/**
- * Проверяет код пользователя: 'ok' | 'invalid' | 'replay'.
- * Шаг времени, в котором код уже принят, повторно принять нельзя —
- * перехваченный код нельзя использовать второй раз.
- */
 async function verifyUserCode(user, code) {
   const secret = decrypt(user.twoFactorSecret);
   const delta = buildTotp(secret, user.email).validate({ token: code, window: twoFactor.window });

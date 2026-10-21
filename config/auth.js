@@ -7,12 +7,20 @@ module.exports = {
   jwt: {
     secret: process.env.JWT_SECRET,
     expiresIn: process.env.JWT_EXPIRES_IN || '1h',
-    // Временный токен между шагами «пароль» и «код из Google Authenticator»
+    // Временный токен между шагами пароль и код из Google Authenticator
     twoFactorExpiresIn: '5m',
     algorithm: 'HS256',
   },
 
   bcryptRounds: 10,
+
+  // Адреса React-клиента: для CORS и для ссылки «Перейти ко входу» на странице подтверждения e-mail
+  client: {
+    origins: (process.env.CLIENT_ORIGIN || 'http://localhost:5173,http://127.0.0.1:5173')
+      .split(',')
+      .map((origin) => origin.trim().replace(/\/+$/, ''))
+      .filter(Boolean),
+  },
 
   verification: {
     ttlHours: 24,
@@ -33,7 +41,6 @@ module.exports = {
     port: smtpPort,
     secure: process.env.SMTP_SECURE ? process.env.SMTP_SECURE === 'true' : smtpPort === 465,
     user: smtpUser,
-    // пароль приложения Google показывается группами через пробел — убираем пробелы
     pass: (process.env.SMTP_PASS || '').replace(/\s+/g, ''),
     from: process.env.MAIL_FROM || (smtpUser ? `"Clinic API" <${smtpUser}>` : ''),
   },

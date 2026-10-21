@@ -1,5 +1,6 @@
 const express = require('express');
 const controller = require('../controllers/authController');
+const registration = require('../controllers/registrationController');
 const auth = require('../middleware/auth');
 const limiters = require('../middleware/rateLimit');
 
@@ -7,9 +8,10 @@ const router = express.Router();
 
 router.use(limiters.general);
 
-router.post('/register', limiters.mail, controller.register);
-router.get('/verify-email', controller.verifyEmail);
-router.post('/resend-verification', limiters.mail, controller.resendVerification);
+// Регистрация пациента: код из письма → анкета и пароль
+router.post('/register/start', limiters.mail, registration.start);
+router.post('/register/verify', limiters.credentials, registration.verify);
+router.post('/register/complete', limiters.credentials, registration.complete);
 
 router.post('/login', limiters.credentials, controller.login);
 router.post('/login/2fa', limiters.credentials, controller.loginTwoFactor);

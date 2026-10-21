@@ -31,6 +31,8 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING(3),
       validate: { isIn: { args: [BLOOD_TYPES], msg: `Группа крови должна быть одной из: ${BLOOD_TYPES.join(', ')}` } },
     },
+    diseases: { type: DataTypes.JSONB, allowNull: false, defaultValue: [] },
+    medications: { type: DataTypes.JSONB, allowNull: false, defaultValue: [] },
     allergies: DataTypes.TEXT,
     chronicDiseases: DataTypes.TEXT,
     notes: {

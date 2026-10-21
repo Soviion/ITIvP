@@ -11,7 +11,7 @@ module.exports = createCrudController({
   },
   fields: [
     'lastName', 'firstName', 'middleName', 'birthDate', 'gender',
-    'phone', 'email', 'address', 'insuranceNumber',
+    'phone', 'email', 'address', 'insuranceNumber', 'socialStatus', 'workplace', 'trustedPerson',
   ],
   required: ['lastName', 'firstName', 'birthDate', 'gender', 'phone'],
   include: [{ model: MedicalRecord, as: 'medicalRecord', attributes: ['id', 'cardNumber'] }],

@@ -2,8 +2,6 @@ import { memo } from 'react';
 import { STATUSES } from '../constants';
 import { formatDate } from '../utils/appointments';
 
-// React.memo: элемент перерисовывается только при изменении его пропсов,
-// поэтому ввод текста в форму не перерисовывает весь список.
 function AppointmentItem({ item, doctor, isEditing, onEdit, onDelete, onStatusChange }) {
   return (
     <li className={`item status-${item.status}${isEditing ? ' is-editing' : ''}`}>

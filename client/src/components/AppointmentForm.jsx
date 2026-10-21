@@ -1,13 +1,10 @@
 import { useEffect, useRef } from 'react';
 import { DOCTORS, STATUSES } from '../constants';
 
-// Контролируемая форма: значения полей хранит родительский компонент (draft),
-// а форма только показывает их и сообщает об изменениях.
 export default function AppointmentForm({ draft, errors, editingId, onFieldChange, onSubmit, onCancel }) {
-  const nameRef = useRef(null);
-  const isEditing = editingId !== null;
+  const nameRef = useRef(null); // хранит между перерисовками
+  const isEditing = editingId !== null; 
 
-  // При переходе в режим редактирования переводим фокус на первое поле
   useEffect(() => {
     if (isEditing) nameRef.current?.focus();
   }, [isEditing, editingId]);

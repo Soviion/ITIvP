@@ -14,42 +14,33 @@ import Filters from './Filters';
 import StatsPanel from './StatsPanel';
 
 export default function AppointmentList() {
-  // ---------- Состояние (useState) ----------
-  const [items, setItems] = useState([]); // массив записей на приём
-  const [loading, setLoading] = useState(true); // идёт «загрузка с сервера»
-  const [draft, setDraft] = useState(createEmptyDraft); // значения полей формы (ленивая инициализация)
-  const [errors, setErrors] = useState({}); // ошибки валидации формы
-  const [editingId, setEditingId] = useState(null); // id редактируемой записи или null
-  const [query, setQuery] = useState(''); // строка поиска
-  const [filter, setFilter] = useLocalStorage(STORAGE_KEYS.filter, DEFAULT_FILTER); // фильтр по статусу
-  const [sort, setSort] = useLocalStorage(STORAGE_KEYS.sort, DEFAULT_SORT); // сортировка
-  const [saveState, setSaveState] = useState({ status: 'idle', at: null }); // индикатор автосохранения
+  const [items, setItems] = useState([]); 
+  const [loading, setLoading] = useState(true); 
+  const [draft, setDraft] = useState(createEmptyDraft); 
+  const [errors, setErrors] = useState({}); 
+  const [editingId, setEditingId] = useState(null); 
+  const [query, setQuery] = useState(''); 
+  const [filter, setFilter] = useLocalStorage(STORAGE_KEYS.filter, DEFAULT_FILTER); 
+  const [sort, setSort] = useLocalStorage(STORAGE_KEYS.sort, DEFAULT_SORT); 
+  const [saveState, setSaveState] = useState({ status: 'idle', at: null }); 
 
-  // Ссылки (useRef) не вызывают перерисовку: хранят последнюю сохранённую версию и актуальный массив
-  const lastSavedRef = useRef(null);
+  const lastSavedRef = useRef(null); // хранит между перерисовками
   const itemsRef = useRef(items);
 
-  // ---------- Эффекты (useEffect) ----------
-
-  // 1. Загрузка при монтировании (пустой массив зависимостей — эффект выполняется один раз).
-  //    Задержка в 1 секунду имитирует запрос к серверу.
   useEffect(() => {
     const timer = setTimeout(() => {
       const { items: loaded, fromStorage } = loadAppointments();
-      if (!fromStorage) saveToStorage(STORAGE_KEYS.items, loaded); // первый запуск: сохраняем начальные данные
+      if (!fromStorage) saveToStorage(STORAGE_KEYS.items, loaded); 
       lastSavedRef.current = loaded;
       setItems(loaded);
       setLoading(false);
     }, LOAD_DELAY_MS);
 
-    return () => clearTimeout(timer); // очистка: если компонент удалён раньше, таймер отменяется
+    return () => clearTimeout(timer); 
   }, []);
 
-  // 2. Сохранение в localStorage при каждом изменении items с debounce 500 мс:
-  //    каждое новое изменение отменяет предыдущий таймер, поэтому запись происходит
-  //    один раз — через 500 мс после последнего изменения.
   useEffect(() => {
-    if (loading || items === lastSavedRef.current) return undefined; // не перезаписываем только что загруженное
+    if (loading || items === lastSavedRef.current) return undefined; 
 
     setSaveState((prev) => ({ ...prev, status: 'saving' }));
     const timer = setTimeout(() => {
@@ -58,10 +49,10 @@ export default function AppointmentList() {
       setSaveState({ status: 'saved', at: new Date() });
     }, SAVE_DELAY_MS);
 
-    return () => clearTimeout(timer); // очистка: новое изменение сбрасывает ожидание
+    return () => clearTimeout(timer); 
   }, [items, loading]);
 
-  // 3. Если страницу закрыли или перезагрузили раньше, чем сработал debounce, — сохраняем сразу
+
   useEffect(() => {
     itemsRef.current = items;
   }, [items]);
@@ -75,19 +66,19 @@ export default function AppointmentList() {
     return () => window.removeEventListener('pagehide', flush);
   }, [loading]);
 
-  // 4. Заголовок страницы зависит от количества записей
+
   useEffect(() => {
     document.title = loading ? 'Загрузка… — записи на приём' : `Записи на приём (${items.length}) — Клиника`;
   }, [items.length, loading]);
 
-  // ---------- Обработчики ----------
+
   const resetForm = useCallback(() => {
     setDraft(createEmptyDraft());
     setErrors({});
     setEditingId(null);
   }, []);
 
-  // 5. Горячая клавиша: Esc отменяет редактирование и очищает форму
+
   useEffect(() => {
     const onKeyDown = (event) => {
       if (event.key === 'Escape') resetForm();
@@ -97,17 +88,17 @@ export default function AppointmentList() {
   }, [resetForm]);
 
   const handleFieldChange = useCallback((name, value) => {
-    setDraft((prev) => ({ ...prev, [name]: value })); // обновление на основе предыдущего значения
+    setDraft((prev) => ({ ...prev, [name]: value })); 
     setErrors((prev) => {
       const next = { ...prev };
-      delete next[name]; // ошибка поля исчезает, как только пользователь его изменил
-      if (name === 'doctorId' || name === 'date' || name === 'status') delete next.time; // конфликт времени зависит от этих полей
+      delete next[name];
+      if (name === 'doctorId' || name === 'date' || name === 'status') delete next.time; 
       return next;
     });
   }, []);
 
   const handleSubmit = (event) => {
-    event.preventDefault(); // отключаем стандартную отправку формы (перезагрузку страницы)
+    event.preventDefault();
 
     const problems = validateDraft(draft, items, editingId);
     setErrors(problems);
@@ -163,10 +154,9 @@ export default function AppointmentList() {
     setFilter(DEFAULT_FILTER);
   };
 
-  // ---------- Производные данные (useMemo) ----------
+
   const stats = useMemo(() => calculateStats(items), [items]);
 
-  // Фильтрация и сортировка пересчитываются только при изменении исходных данных или настроек
   const visibleItems = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
     return items
@@ -174,7 +164,6 @@ export default function AppointmentList() {
       .sort(compareAppointments(sort));
   }, [items, query, filter, sort]);
 
-  // ---------- Разметка ----------
   const isFiltered = query.trim() !== '' || filter !== 'all';
 
   return (

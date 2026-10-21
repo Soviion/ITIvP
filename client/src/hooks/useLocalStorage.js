@@ -11,16 +11,9 @@ function readInitial(key, initialValue) {
   return stored;
 }
 
-/**
- * useState, значение которого хранится в localStorage.
- * Возвращает [value, setValue] — как обычный useState.
- */
 export function useLocalStorage(key, initialValue) {
-  // Ленивая инициализация: функция-инициализатор вызывается один раз, при первом рендере,
-  // поэтому localStorage читается один раз, а не при каждом обновлении компонента
   const [value, setValue] = useState(() => readInitial(key, initialValue));
 
-  // Сохранение при каждом изменении значения
   useEffect(() => {
     saveToStorage(key, value);
   }, [key, value]);

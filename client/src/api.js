@@ -195,7 +195,6 @@ export const deleteAppointment = (id) => api
   .delete(`/appointments/${id}`)
   .then(({ data }) => data);
 
-//  Справочники 
 
 export const fetchPatients = (signal) => api.get('/patients', { signal }).then(({ data }) => data);
 
